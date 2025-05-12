@@ -12,6 +12,7 @@
             --color-border-hover: #d0d0d0;
             --color-hover: #e8e8e8;
             --color-night: #f1f1f1;
+            --color-danger: #d14d41; /* Flexoki red */
             --bg-main: #f8f7f6;
             --bg-surface: #f2f1f0;
             --bg-surface-hover: #e8e8e8;
@@ -168,6 +169,26 @@
             opacity: 0.7;
         }
 
+        /* Hide the add indicator by default */
+        .add-indicator {
+            opacity: 0;
+            transition: opacity 0.2s;
+            font-size: 20px;
+            color: #666;
+            pointer-events: none;
+        }
+
+        /* Show it on hover of the parent element */
+        .element:hover .add-indicator {
+            opacity: 1;
+        }
+        .empty-action .add-indicator {
+            opacity: 0;
+        }
+        .empty-action:hover .add-indicator {
+            opacity: 1;
+        }
+
         .modal {
             display: none;
             position: fixed;
@@ -233,6 +254,26 @@
             visibility: hidden;
         }
 
+        #element-form input {
+            border: none;
+            border-bottom: 2px solid var(--color-border);
+            background: transparent;
+            margin-bottom: 16px;
+            width: 100%;
+            font-size: 16px;
+            padding: 4px;
+            outline: none;
+        }
+
+        #element-form input:focus {
+            border-bottom-color: var(--color-text-primary);
+        }
+
+        .danger-button {
+            background-color: var(--color-danger);
+            color: white;
+        }
+
         /* Make the grid responsive */
         @media (max-width: 1200px) {
             .periodic-table {
@@ -289,6 +330,24 @@
         </div>
     </div>
 
+    <div class="modal" id="element-modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 id="element-modal-title">Add Element</h2>
+            <button class="close-button" id="close-element-modal">&times;</button>
+          </div>
+          <form id="element-form">
+            <input type="text" id="symbol-input" placeholder="Symbol" required />
+            <input type="url" id="url-input" placeholder="URL" required />
+            <input type="text" id="name-input" placeholder="Name" required />
+            <div class="button-row">
+              <button type="submit" class="button" id="element-save-button">Save</button>
+              <button type="button" class="button danger-button" id="element-delete-button" style="display: none;">Delete</button>
+            </div>
+          </form>
+        </div>
+      </div>      
+
     <script>
         // Default sites (first two rows of the periodic table as an example)
         const defaultSites = [
@@ -333,7 +392,7 @@
             
             // Create a 18x7 grid for the periodic table layout
             const grid = Array(7).fill().map(() => Array(18).fill(null));
-            
+
             // Place sites in the grid based on their positions
             sites.forEach(site => {
                 const { row, col } = site.position;
@@ -372,8 +431,30 @@
                                 fromCol: col
                             }));
                         });
+                        
+                        // Make the element editable
+                        elementDiv.addEventListener('contextmenu', (e) => {
+                            e.preventDefault();
+                            openElementModal(
+                                { row: row + 1, col: col + 1 },
+                                site
+                            );
+                        });
+
+
                     } else {
-                        elementDiv.className = 'element empty-cell';
+                        elementDiv.className = 'element';
+                        elementDiv.style.opacity = 0.3;
+                        elementDiv.innerHTML = `<div class="add-indicator">+</div>`;
+                        elementDiv.classList.add('empty-action');
+
+                        elementDiv.addEventListener('click', () => {
+                            elementDiv.addEventListener('click', () => {
+                            openElementModal({ row: row + 1, col: col + 1 });
+                        });
+
+                        });
+
                     }
                     
                     // Add drag events for all cells to enable dropping
@@ -440,7 +521,7 @@
         
         // Function to apply search filtering
         function applySearch() {
-            const elements = document.querySelectorAll('.element:not(.empty-cell)');
+            const elements = document.querySelectorAll('.element:not(.empty-action)');
             const searchTerm = currentSearch.toLowerCase();
             
             let hasHighlighted = false;
@@ -573,6 +654,62 @@
                 console.error(error);
             }
         }
+
+        const elementModal = document.getElementById('element-modal');
+        const elementForm = document.getElementById('element-form');
+        const modalTitle = document.getElementById('element-modal-title');
+        const closeElementModal = document.getElementById('close-element-modal');
+        const symbolInput = document.getElementById('symbol-input');
+        const urlInput = document.getElementById('url-input');
+        const nameInput = document.getElementById('name-input');
+        const deleteButton = document.getElementById('element-delete-button');
+
+        let currentEditPosition = null;
+
+        function openElementModal(pos, existingSite = null) {
+            currentEditPosition = pos;
+            symbolInput.value = existingSite?.symbol || '';
+            urlInput.value = existingSite?.url || '';
+            nameInput.value = existingSite?.name || '';
+
+            modalTitle.textContent = existingSite ? 'Edit Element' : 'Add Element';
+            deleteButton.style.display = existingSite ? 'inline-block' : 'none';
+
+            elementModal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            elementModal.style.display = 'none';
+        }
+
+        closeElementModal.addEventListener('click', closeModal);
+
+        elementForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const { row, col } = currentEditPosition;
+            const symbol = symbolInput.value.trim();
+            const url = urlInput.value.trim();
+            const name = nameInput.value.trim();
+
+            const existingIndex = sites.findIndex(s => s.position.row === row && s.position.col === col);
+            const siteData = { symbol, url, name, position: { row, col } };
+
+            if (existingIndex !== -1) sites[existingIndex] = siteData;
+            else sites.push(siteData);
+
+            saveSites();
+            renderPeriodicTable();
+            closeModal();
+        });
+
+        deleteButton.addEventListener('click', () => {
+            const { row, col } = currentEditPosition;
+            sites = sites.filter(s => !(s.position.row === row && s.position.col === col));
+            saveSites();
+            renderPeriodicTable();
+            closeModal();
+        });
+
         
         // Event listeners for the settings modal
         settingsButton.addEventListener('click', openSettingsModal);
