@@ -1,566 +1,570 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Periodic Sites</title>
-  <style>
-    :root {
-      --color-text-primary: #333;
-      --color-text-secondary: #666;
-      --color-border: #e0e0e0;
-      --color-border-hover: #d0d0d0;
-      --color-hover: #e8e8e8;
-      --color-night: #f1f1f1;
-      --bg-main: #f8f7f6;
-      --bg-surface: #f2f1f0;
-      --bg-surface-hover: #e8e8e8;
-      --bg-secondary: #e8e8e8;
-      --bg-component: #e0e0e0;
-      --bg-placeholder: #ccc;
-      
-      /* Element category colors */
-      --alkali-metal: #ffcccc;
-      --alkaline-earth: #ffdead;
-      --transition-metal: #ffcc99;
-      --post-transition: #ccffcc;
-      --metalloid: #ccffff;
-      --nonmetal: #ccccff;
-      --noble-gas: #ffccff;
-      --lanthanide: #ff99cc;
-      --actinide: #ff9999;
-      
-      /* Status colors */
-      --highlighted: rgba(255, 215, 0, 0.5);
-      --disabled: rgba(200, 200, 200, 0.5);
-    }
-    
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-      background-color: var(--bg-main);
-      color: var(--color-text-primary);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-    
-    header {
-      padding: 1rem;
-      text-align: center;
-      background-color: var(--bg-surface);
-      border-bottom: 1px solid var(--color-border);
-    }
-    
-    h1 {
-      margin: 0;
-      font-size: 1.5rem;
-    }
-    
-    #search-display {
-      background: transparent;
-      border: none;
-      font-size: 1.2rem;
-      padding: 0.5rem;
-      text-align: center;
-      outline: none;
-      color: var(--color-text-primary);
-    }
-    
-    main {
-      flex: 1;
-      padding: 1rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    
-    .periodic-table {
-      display: grid;
-      grid-template-columns: repeat(18, 1fr);
-      grid-template-rows: repeat(10, 1fr);
-      gap: 4px;
-      width: 100%;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-    
-    .element {
-      aspect-ratio: 1;
-      border: 1px solid var(--color-border);
-      border-radius: 4px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      align-items: center;
-      padding: 4px;
-      background-color: var(--bg-surface);
-      cursor: pointer;
-      transition: all 0.2s ease;
-      user-select: none;
-      position: relative;
-    }
-    
-    .element:hover {
-      background-color: var(--bg-surface-hover);
-      border-color: var(--color-border-hover);
-      transform: scale(1.05);
-      z-index: 1;
-    }
-    
-    .element.highlighted {
-      background-color: var(--highlighted);
-      border-color: gold;
-      z-index: 2;
-    }
-    
-    .element.disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-    
-    .symbol {
-      font-size: 1.5rem;
-      font-weight: bold;
-    }
-    
-    .name {
-      font-size: 0.7rem;
-      text-align: center;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      width: 100%;
-    }
-    
-    .settings-btn {
-      position: fixed;
-      bottom: 1rem;
-      right: 1rem;
-      background-color: var(--bg-component);
-      border: none;
-      border-radius: 50%;
-      width: 3rem;
-      height: 3rem;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      cursor: pointer;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    }
-    
-    .settings-panel {
-      position: fixed;
-      top: 0;
-      right: 0;
-      width: 100%;
-      max-width: 500px;
-      height: 100%;
-      background-color: var(--bg-surface);
-      box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
-      transform: translateX(100%);
-      transition: transform 0.3s ease;
-      z-index: 1000;
-      display: flex;
-      flex-direction: column;
-      padding: 1rem;
-      box-sizing: border-box;
-    }
-    
-    .settings-panel.open {
-      transform: translateX(0);
-    }
-    
-    .settings-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid var(--color-border);
-      padding-bottom: 1rem;
-      margin-bottom: 1rem;
-    }
-    
-    .close-settings {
-      background: none;
-      border: none;
-      font-size: 1.5rem;
-      cursor: pointer;
-    }
-    
-    .settings-content {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-    
-    .settings-section {
-      margin-bottom: 1rem;
-    }
-    
-    .settings-section h3 {
-      margin-top: 0;
-    }
-    
-    #sites-config {
-      width: 100%;
-      height: 300px;
-      font-family: monospace;
-      padding: 0.5rem;
-      box-sizing: border-box;
-      border: 1px solid var(--color-border);
-      border-radius: 4px;
-      background-color: var(--bg-main);
-    }
-    
-    .settings-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 0.5rem;
-      margin-top: 1rem;
-    }
-    
-    button {
-      padding: 0.5rem 1rem;
-      background-color: var(--bg-component);
-      border: 1px solid var(--color-border);
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    
-    button:hover {
-      background-color: var(--bg-surface-hover);
-    }
-    
-    .placeholder {
-      background-color: transparent;
-      border: none;
-      visibility: hidden;
-    }
-    
-    /* Positions for special rows */
-    .lanthanide,
-    .actinide {
-      grid-column: span 1;
-    }
-    
-    /* Empty space below elements */
-    .gap-note {
-      grid-column: 3 / span 10;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-      font-size: 0.8rem;
-      color: var(--color-text-secondary);
-    }
-    
-    /* Category colors */
-    .cat-social { background-color: var(--alkali-metal); }
-    .cat-productivity { background-color: var(--alkaline-earth); }
-    .cat-shopping { background-color: var(--transition-metal); }
-    .cat-entertainment { background-color: var(--post-transition); }
-    .cat-news { background-color: var(--metalloid); }
-    .cat-reference { background-color: var(--nonmetal); }
-    .cat-tech { background-color: var(--noble-gas); }
-    .cat-custom1 { background-color: var(--lanthanide); }
-    .cat-custom2 { background-color: var(--actinide); }
-    
-    /* Toast notification */
-    .toast {
-      position: fixed;
-      bottom: 2rem;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: var(--bg-surface);
-      padding: 0.75rem 1.5rem;
-      border-radius: 4px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-      opacity: 0;
-      transition: opacity 0.3s ease;
-      z-index: 2000;
-    }
-    
-    .toast.show {
-      opacity: 1;
-    }
-    
-    /* Legend */
-    .legend {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 0.5rem;
-      margin: 1rem 0;
-      font-size: 0.8rem;
-    }
-    
-    .legend-item {
-      display: flex;
-      align-items: center;
-      margin-right: 1rem;
-    }
-    
-    .legend-color {
-      width: 1rem;
-      height: 1rem;
-      margin-right: 0.5rem;
-      border: 1px solid var(--color-border);
-      border-radius: 2px;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Periodict</title>
+    <style>
+        :root {
+            --color-text-primary: #333;
+            --color-text-secondary: #666;
+            --color-border: #e0e0e0;
+            --color-border-hover: #d0d0d0;
+            --color-hover: #e8e8e8;
+            --color-night: #f1f1f1;
+            --bg-main: #f8f7f6;
+            --bg-surface: #f2f1f0;
+            --bg-surface-hover: #e8e8e8;
+            --bg-secondary: #e8e8e8;
+            --bg-component: #e0e0e0;
+            --bg-placeholder: #ccc;
+        }
 
-    /* Overlay for initial setup */
-    .overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.5);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 2000;
-    }
-    
-    .setup-panel {
-      background-color: var(--bg-surface);
-      padding: 2rem;
-      border-radius: 8px;
-      width: 90%;
-      max-width: 600px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-    }
-    
-    .setup-panel h2 {
-      margin-top: 0;
-    }
-    
-    .setup-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 0.5rem;
-      margin-top: 2rem;
-    }
-  </style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--color-text-primary);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 1200px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            margin: 0;
+            padding: 0;
+            font-size: 32px;
+            font-weight: 500;
+        }
+
+        .search-display {
+            margin-top: 10px;
+            height: 24px;
+            font-size: 18px;
+            color: var(--color-text-primary);
+            letter-spacing: 1px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .button {
+            background-color: var(--bg-component);
+            border: 1px solid var(--color-border);
+            border-radius: 4px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .button:hover {
+            background-color: var(--bg-surface-hover);
+            border-color: var(--color-border-hover);
+        }
+
+        #settings-button {
+            background-color: var(--bg-surface);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-size: 20px;
+        }
+
+        .periodic-table {
+            display: grid;
+            grid-template-columns: repeat(18, 1fr);
+            grid-template-rows: repeat(7, 1fr);
+            gap: 6px;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        .element {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 4px;
+            aspect-ratio: 1/1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .element:hover {
+            background-color: var(--bg-surface-hover);
+            border-color: var(--color-border-hover);
+            transform: translateY(-2px);
+        }
+
+        .element.highlighted {
+            background-color: var(--bg-secondary);
+            border-color: var(--color-text-secondary);
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .element.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .element-symbol {
+            font-size: 24px;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        .element-name {
+            font-size: 10px;
+            margin-top: 4px;
+            text-align: center;
+            max-width: 90%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .element-position {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            font-size: 8px;
+            opacity: 0.7;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: var(--bg-main);
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+        }
+
+        .close-button {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--color-text-secondary);
+        }
+
+        textarea {
+            width: calc(100% - 40px);
+            height: 300px;
+            background-color: var(--bg-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 4px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 14px;
+            resize: vertical;
+        }
+
+        .button-row {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .empty-cell {
+            visibility: hidden;
+        }
+
+        /* Make the grid responsive */
+        @media (max-width: 1200px) {
+            .periodic-table {
+                grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+                grid-auto-rows: 1fr;
+                grid-auto-flow: dense;
+            }
+            
+            .element {
+                grid-column: span 1;
+                grid-row: span 1;
+            }
+
+            .element-symbol {
+                font-size: 18px;
+            }
+
+            .element-name {
+                font-size: 8px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <header>
-    <h1>Periodic Sites</h1>
-    <div id="search-display" aria-live="polite"></div>
-  </header>
-  
-  <main>
-    <div class="legend">
-      <div class="legend-item">
-        <div class="legend-color cat-social"></div>
-        <span>Social</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-color cat-productivity"></div>
-        <span>Productivity</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-color cat-shopping"></div>
-        <span>Shopping</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-color cat-entertainment"></div>
-        <span>Entertainment</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-color cat-news"></div>
-        <span>News</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-color cat-reference"></div>
-        <span>Reference</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-color cat-tech"></div>
-        <span>Tech</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-color cat-custom1"></div>
-        <span>Custom 1</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-color cat-custom2"></div>
-        <span>Custom 2</span>
-      </div>
-    </div>
-    
-    <div class="periodic-table" id="periodic-table"></div>
-  </main>
-  
-  <button class="settings-btn" id="settings-btn" aria-label="Settings">⚙️</button>
-  
-  <div class="settings-panel" id="settings-panel">
-    <div class="settings-header">
-      <h2>Settings</h2>
-      <button class="close-settings" id="close-settings" aria-label="Close settings">×</button>
-    </div>
-    <div class="settings-content">
-      <div class="settings-section">
-        <h3>Manage Websites</h3>
-        <p>Edit the list below in the format: Symbol,URL,Name,Category</p>
-        <textarea id="sites-config" placeholder="Example:
-FB,https://facebook.com,Facebook,social
-YT,https://youtube.com,YouTube,entertainment
-GH,https://github.com,GitHub,tech"></textarea>
-      </div>
-      <div class="settings-section">
-        <h3>Import/Export</h3>
-        <div class="settings-actions">
-          <button id="export-btn">Export Settings</button>
-          <button id="import-btn">Import Settings</button>
+    <header>
+        <div>
+            <h1>Periodict</h1>
+            <div class="search-display" id="search-display"></div>
         </div>
-      </div>
-      <div class="settings-actions">
-        <button id="save-settings">Save</button>
-        <button id="reset-settings">Reset to Default</button>
-      </div>
+        <div class="actions">
+            <button class="button" id="settings-button">⚙️</button>
+        </div>
+    </header>
+
+    <div class="periodic-table" id="periodic-table">
+        <!-- The periodic table elements will be dynamically generated here -->
     </div>
-  </div>
-  
-  <div class="toast" id="toast">Changes saved successfully!</div>
-  
-  <script>
-    // Default websites with periodic table layout
-    const defaultSites = [
-      // Row 1
-      { symbol: "H", url: "https://home.com", name: "Home", category: "productivity", position: {row: 1, col: 1} },
-      { symbol: "He", url: "https://helium.com", name: "Helium", category: "tech", position: {row: 1, col: 18} },
-      
-      // Row 2
-      { symbol: "Li", url: "https://linkedin.com", name: "LinkedIn", category: "social", position: {row: 2, col: 1} },
-      { symbol: "Be", url: "https://behance.net", name: "Behance", category: "productivity", position: {row: 2, col: 2} },
-      { symbol: "B", url: "https://bing.com", name: "Bing", category: "reference", position: {row: 2, col: 13} },
-      { symbol: "C", url: "https://claude.ai", name: "Claude", category: "tech", position: {row: 2, col: 14} },
-      { symbol: "N", url: "https://netflix.com", name: "Netflix", category: "entertainment", position: {row: 2, col: 15} },
-      { symbol: "O", url: "https://outlook.com", name: "Outlook", category: "productivity", position: {row: 2, col: 16} },
-      { symbol: "F", url: "https://facebook.com", name: "Facebook", category: "social", position: {row: 2, col: 17} },
-      { symbol: "Ne", url: "https://news.com", name: "News", category: "news", position: {row: 2, col: 18} },
-      
-      // Row 3
-      { symbol: "Na", url: "https://nasa.gov", name: "NASA", category: "reference", position: {row: 3, col: 1} },
-      { symbol: "Mg", url: "https://medium.com", name: "Medium", category: "news", position: {row: 3, col: 2} },
-      { symbol: "Al", url: "https://amazon.com", name: "Amazon", category: "shopping", position: {row: 3, col: 13} },
-      { symbol: "Si", url: "https://stackoverflow.com", name: "Stack Overflow", category: "tech", position: {row: 3, col: 14} },
-      { symbol: "P", url: "https://pinterest.com", name: "Pinterest", category: "social", position: {row: 3, col: 15} },
-      { symbol: "S", url: "https://spotify.com", name: "Spotify", category: "entertainment", position: {row: 3, col: 16} },
-      { symbol: "Cl", url: "https://chatgpt.com", name: "ChatGPT", category: "tech", position: {row: 3, col: 17} },
-      { symbol: "Ar", url: "https://arxiv.org", name: "arXiv", category: "reference", position: {row: 3, col: 18} },
-      
-      // Row 4
-      { symbol: "K", url: "https://khan.academy", name: "Khan Academy", category: "reference", position: {row: 4, col: 1} },
-      { symbol: "Ca", url: "https://calendar.google.com", name: "Calendar", category: "productivity", position: {row: 4, col: 2} },
-      { symbol: "Sc", url: "https://scribd.com", name: "Scribd", category: "reference", position: {row: 4, col: 3} },
-      { symbol: "Ti", url: "https://tiktok.com", name: "TikTok", category: "entertainment", position: {row: 4, col: 4} },
-      { symbol: "V", url: "https://vimeo.com", name: "Vimeo", category: "entertainment", position: {row: 4, col: 5} },
-      { symbol: "Cr", url: "https://craigslist.org", name: "Craigslist", category: "shopping", position: {row: 4, col: 6} },
-      { symbol: "Mn", url: "https://mail.google.com", name: "Gmail", category: "productivity", position: {row: 4, col: 7} },
-      { symbol: "Fe", url: "https://fandom.com", name: "Fandom", category: "entertainment", position: {row: 4, col: 8} },
-      { symbol: "Co", url: "https://coursera.org", name: "Coursera", category: "reference", position: {row: 4, col: 9} },
-      { symbol: "Ni", url: "https://nike.com", name: "Nike", category: "shopping", position: {row: 4, col: 10} },
-      { symbol: "Cu", url: "https://curiosity.com", name: "Curiosity", category: "reference", position: {row: 4, col: 11} },
-      { symbol: "Zn", url: "https://zoom.us", name: "Zoom", category: "productivity", position: {row: 4, col: 12} },
-      { symbol: "Ga", url: "https://games.com", name: "Games", category: "entertainment", position: {row: 4, col: 13} },
-      { symbol: "Ge", url: "https://genius.com", name: "Genius", category: "reference", position: {row: 4, col: 14} },
-      { symbol: "As", url: "https://aliexpress.com", name: "AliExpress", category: "shopping", position: {row: 4, col: 15} },
-      { symbol: "Se", url: "https://stackoverflow.com", name: "SE Network", category: "tech", position: {row: 4, col: 16} },
-      { symbol: "Br", url: "https://brave.com", name: "Brave", category: "tech", position: {row: 4, col: 17} },
-      { symbol: "Kr", url: "https://krunker.io", name: "Krunker", category: "entertainment", position: {row: 4, col: 18} },
-      
-      // Row 5
-      { symbol: "Rb", url: "https://reddit.com", name: "Reddit", category: "social", position: {row: 5, col: 1} },
-      { symbol: "Sr", url: "https://drive.google.com", name: "Drive", category: "productivity", position: {row: 5, col: 2} },
-      { symbol: "Y", url: "https://youtube.com", name: "YouTube", category: "entertainment", position: {row: 5, col: 3} },
-      { symbol: "Zr", url: "https://zara.com", name: "Zara", category: "shopping", position: {row: 5, col: 4} },
-      { symbol: "Nb", url: "https://nba.com", name: "NBA", category: "entertainment", position: {row: 5, col: 5} },
-      { symbol: "Mo", url: "https://mozilla.org", name: "Mozilla", category: "tech", position: {row: 5, col: 6} },
-      { symbol: "Tc", url: "https://twitch.tv", name: "Twitch", category: "entertainment", position: {row: 5, col: 7} },
-      { symbol: "Ru", url: "https://reuters.com", name: "Reuters", category: "news", position: {row: 5, col: 8} },
-      { symbol: "Rh", url: "https://researchgate.net", name: "ResearchGate", category: "reference", position: {row: 5, col: 9} },
-      { symbol: "Pd", url: "https://paypal.com", name: "PayPal", category: "productivity", position: {row: 5, col: 10} },
-      { symbol: "Ag", url: "https://airbnb.com", name: "Airbnb", category: "shopping", position: {row: 5, col: 11} },
-      { symbol: "Cd", url: "https://cnn.com", name: "CNN", category: "news", position: {row: 5, col: 12} },
-      { symbol: "In", url: "https://instagram.com", name: "Instagram", category: "social", position: {row: 5, col: 13} },
-      { symbol: "Sn", url: "https://snopes.com", name: "Snopes", category: "reference", position: {row: 5, col: 14} },
-      { symbol: "Sb", url: "https://substack.com", name: "Substack", category: "news", position: {row: 5, col: 15} },
-      { symbol: "Te", url: "https://tesla.com", name: "Tesla", category: "tech", position: {row: 5, col: 16} },
-      { symbol: "I", url: "https://imdb.com", name: "IMDb", category: "entertainment", position: {row: 5, col: 17} },
-      { symbol: "Xe", url: "https://xero.com", name: "Xero", category: "productivity", position: {row: 5, col: 18} },
-      
-      // Row 6
-      { symbol: "Cs", url: "https://csstricks.com", name: "CSS Tricks", category: "tech", position: {row: 6, col: 1} },
-      { symbol: "Ba", url: "https://bankofamerica.com", name: "Bank of America", category: "productivity", position: {row: 6, col: 2} },
-      { symbol: "La", url: "https://lastfm.com", name: "Last.fm", category: "entertainment", position: {row: 6, col: 3} },
-      { symbol: "Hf", url: "https://hulu.com", name: "Hulu", category: "entertainment", position: {row: 6, col: 4} },
-      { symbol: "Ta", url: "https://target.com", name: "Target", category: "shopping", position: {row: 6, col: 5} },
-      { symbol: "W", url: "https://wikipedia.org", name: "Wikipedia", category: "reference", position: {row: 6, col: 6} },
-      { symbol: "Re", url: "https://reuters.com", name: "Reuters", category: "news", position: {row: 6, col: 7} },
-      { symbol: "Os", url: "https://office365.com", name: "Office 365", category: "productivity", position: {row: 6, col: 8} },
-      { symbol: "Ir", url: "https://irs.gov", name: "IRS", category: "reference", position: {row: 6, col: 9} },
-      { symbol: "Pt", url: "https://pinterest.com", name: "Pinterest", category: "social", position: {row: 6, col: 10} },
-      { symbol: "Au", url: "https://apple.com", name: "Apple", category: "tech", position: {row: 6, col: 11} },
-      { symbol: "Hg", url: "https://hotels.com", name: "Hotels.com", category: "shopping", position: {row: 6, col: 12} },
-      { symbol: "Tl", url: "https://translate.google.com", name: "Translate", category: "productivity", position: {row: 6, col: 13} },
-      { symbol: "Pb", url: "https://pubmed.gov", name: "PubMed", category: "reference", position: {row: 6, col: 14} },
-      { symbol: "Bi", url: "https://bing.com", name: "Bing", category: "reference", position: {row: 6, col: 15} },
-      { symbol: "Po", url: "https://pollfy.com", name: "Pollfy", category: "productivity", position: {row: 6, col: 16} },
-      { symbol: "At", url: "https://atlassian.com", name: "Atlassian", category: "tech", position: {row: 6, col: 17} },
-      { symbol: "Rn", url: "https://reuters.com", name: "Reuters", category: "news", position: {row: 6, col: 18} },
-      
-      // Row 7
-      { symbol: "Fr", url: "https://framer.com", name: "Framer", category: "productivity", position: {row: 7, col: 1} },
-      { symbol: "Ra", url: "https://rakuten.com", name: "Rakuten", category: "shopping", position: {row: 7, col: 2} },
-      { symbol: "Ac", url: "https://academia.edu", name: "Academia", category: "reference", position: {row: 7, col: 3} },
-      { symbol: "Rf", url: "https://reference.com", name: "Reference", category: "reference", position: {row: 7, col: 4} },
-      { symbol: "Db", url: "https://dropbox.com", name: "Dropbox", category: "productivity", position: {row: 7, col: 5} },
-      { symbol: "Sg", url: "https://soundcloud.com", name: "SoundCloud", category: "entertainment", position: {row: 7, col: 6} },
-      { symbol: "Bh", url: "https://bhphotovideo.com", name: "B&H Photo", category: "shopping", position: {row: 7, col: 7} },
-      { symbol: "Hs", url: "https://hs.fi", name: "Helsingin Sanomat", category: "news", position: {row: 7, col: 8} },
-      { symbol: "Mt", url: "https://microsoft.com", name: "Microsoft", category: "tech", position: {row: 7, col: 9} },
-      { symbol: "Ds", url: "https://docs.google.com", name: "Google Docs", category: "productivity", position: {row: 7, col: 10} },
-      { symbol: "Rg", url: "https://roblox.com", name: "Roblox", category: "entertainment", position: {row: 7, col: 11} },
-      { symbol: "Cn", url: "https://cnn.com", name: "CNN", category: "news", position: {row: 7, col: 12} },
-      { symbol: "Nh", url: "https://newegg.com", name: "Newegg", category: "shopping", position: {row: 7, col: 13} },
-      { symbol: "Fl", url: "https://flickr.com", name: "Flickr", category: "social", position: {row: 7, col: 14} },
-      { symbol: "Mc", url: "https://maps.google.com", name: "Maps", category: "productivity", position: {row: 7, col: 15} },
-      { symbol: "Lv", url: "https://live.com", name: "Outlook", category: "productivity", position: {row: 7, col: 16} },
-      { symbol: "Ts", url: "https://techsmith.com", name: "TechSmith", category: "tech", position: {row: 7, col: 17} },
-      { symbol: "Og", url: "https://oracle.com", name: "Oracle", category: "tech", position: {row: 7, col: 18} },
-      
-      // Lanthanide series (Row 8)
-      { symbol: "Ce", url: "https://ces.tech", name: "CES", category: "custom1", position: {row: 8, col: 4} },
-      { symbol: "Pr", url: "https://priceline.com", name: "Priceline", category: "custom1", position: {row: 8, col: 5} },
-      { symbol: "Nd", url: "https://nasdaq.com", name: "NASDAQ", category: "custom1", position: {row: 8, col: 6} },
-      { symbol: "Pm", url: "https://puma.com", name: "Puma", category: "custom1", position: {row: 8, col: 7} },
-      { symbol: "Sm", url: "https://samsung.com", name: "Samsung", category: "custom1", position: {row: 8, col: 8} },
-      { symbol: "Eu", url: "https://europa.eu", name: "European Union", category: "custom1", position: {row: 8, col: 9} },
-      { symbol: "Gd", url: "https://github.com", name: "GitHub", category: "custom1", position: {row: 8, col: 10} },
-      { symbol: "Tb", url: "https://turbotax.com", name: "TurboTax", category: "custom1", position: {row: 8, col: 11} },
-      { symbol: "Dy", url: "https://disney.com", name: "Disney", category: "custom1", position: {row: 8, col: 12} },
-      { symbol: "Ho", url: "https://homedepot.com", name: "Home Depot", category: "custom1", position: {row: 8, col: 13} },
-      { symbol: "Er", url: "https://etsy.com", name: "Etsy", category: "custom1", position: {row: 8, col: 14} },
-      { symbol: "Tm", url: "https://tmz.com", name: "TMZ", category: "custom1", position: {row: 8, col: 15} },
-      { symbol: "Yb", url: "https://yahoo.com", name: "Yahoo", category: "custom1", position: {row: 8, col: 16} },
-      { symbol: "Lu", url: "https://lululemon.com", name: "Lululemon", category: "custom1", position: {row: 8, col: 17} },
-      
-      // Actinide series (Row 9)
-      { symbol: "Th", url: "https://theverge.com", name: "The Verge", category: "custom2", position: {row: 9, col: 4} },
-      { symbol: "Pa", url: "https://pandora.com", name: "Pandora", category: "custom2", position: {row: 9, col: 5} },
-      { symbol: "U", url: "https://usnews.com", name: "US News", category: "custom2", position: {row: 9, col: 6} },
-      { symbol: "Np", url: "https://npr.org", name: "NPR", category: "custom2", position: {row: 9, col: 7} },
-      { symbol: "Pu", url: "https://purdue.edu", name: "Purdue", category: "custom2", position: {row: 9, col: 8} },
-      { symbol: "Am", url: "https://amazon.com", name: "Amazon", category: "custom2", position: {row: 9, col: 9} },
-      { symbol: "Cm", url: "https://costco.com", name: "Costco", category: "custom2", position: {row: 9, col: 10} },
-      { symbol: "Bk", url: "https://booking.com", name: "Booking", category: "custom2", position: {row: 9, col: 11} },
-      { symbol: "Cf", url: "https://chase.com", name: "Chase", category: "custom2", position: {row: 9, col: 12} },
-      { symbol: "Es", url: "https://espn.com", name: "ESPN", category: "custom2", position: {row: 9, col: 13} },
-      { symbol: "Fm", url: "https://fandom.com", name: "Fandom", category: "custom2", position: {row: 9, col: 14} },
-      { symbol: "Md", url: "https://mastercard.com", name: "MasterCard", category: "custom2", position: {row: 9, col: 15} },
-      { symbol: "No", url: "https://notion.so", name: "Notion", category: "custom2", position: {row: 9, col: 16} },
-      { symbol: "Lr", url: "https://linkedin.com", name: "LinkedIn", category: "custom2", position: {row: 9, col: 17} }
-    ];
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settings-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Settings</h2>
+                <button class="close-button" id="close-settings">&times;</button>
+            </div>
+            <p>Edit your websites below (one per line, format: Symbol,URL,Name)</p>
+            <textarea id="sites-editor"></textarea>
+            <div class="button-row">
+                <button class="button" id="cancel-settings">Cancel</button>
+                <button class="button" id="save-settings">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Default sites (first two rows of the periodic table as an example)
+        const defaultSites = [
+            // Row 1
+            { symbol: "H", url: "https://home.com", name: "Home", position: { row: 1, col: 1 } },
+            { symbol: "He", url: "https://help.com", name: "Help", position: { row: 1, col: 18 } },
+            
+            // Row 2
+            { symbol: "Li", url: "https://linkedin.com", name: "LinkedIn", position: { row: 2, col: 1 } },
+            { symbol: "Be", url: "https://behance.net", name: "Behance", position: { row: 2, col: 2 } },
+            { symbol: "B", url: "https://bing.com", name: "Bing", position: { row: 2, col: 13 } },
+            { symbol: "C", url: "https://claude.ai", name: "Claude", position: { row: 2, col: 14 } },
+            { symbol: "N", url: "https://netflix.com", name: "Netflix", position: { row: 2, col: 15 } },
+            { symbol: "O", url: "https://outlook.com", name: "Outlook", position: { row: 2, col: 16 } },
+            { symbol: "F", url: "https://facebook.com", name: "Facebook", position: { row: 2, col: 17 } },
+            { symbol: "Ne", url: "https://news.com", name: "News", position: { row: 2, col: 18 } },
+        ];
+
+        // Initialize sites from localStorage or use defaults
+        let sites = JSON.parse(localStorage.getItem('periodict-sites')) || defaultSites;
+        
+        // Track most visited sites (simplified version)
+        let visitCounts = JSON.parse(localStorage.getItem('periodict-visits')) || {};
+
+        // Get DOM elements
+        const periodicTable = document.getElementById('periodic-table');
+        const searchDisplay = document.getElementById('search-display');
+        const settingsButton = document.getElementById('settings-button');
+        const settingsModal = document.getElementById('settings-modal');
+        const closeSettings = document.getElementById('close-settings');
+        const cancelSettings = document.getElementById('cancel-settings');
+        const saveSettings = document.getElementById('save-settings');
+        const sitesEditor = document.getElementById('sites-editor');
+
+        // Current search term
+        let currentSearch = '';
+        
+        // Function to render the periodic table
+        function renderPeriodicTable() {
+            // Clear the table
+            periodicTable.innerHTML = '';
+            
+            // Create a 18x7 grid for the periodic table layout
+            const grid = Array(7).fill().map(() => Array(18).fill(null));
+            
+            // Place sites in the grid based on their positions
+            sites.forEach(site => {
+                const { row, col } = site.position;
+                if (row >= 1 && row <= 7 && col >= 1 && col <= 18) {
+                    grid[row-1][col-1] = site;
+                }
+            });
+            
+            // Render the grid
+            for (let row = 0; row < 7; row++) {
+                for (let col = 0; col < 18; col++) {
+                    const site = grid[row][col];
+                    const elementDiv = document.createElement('div');
+                    
+                    if (site) {
+                        elementDiv.className = 'element';
+                        elementDiv.innerHTML = `
+                            <div class="element-position">${row+1},${col+1}</div>
+                            <div class="element-symbol">${site.symbol}</div>
+                            <div class="element-name">${site.name}</div>
+                        `;
+                        elementDiv.dataset.url = site.url;
+                        elementDiv.dataset.symbol = site.symbol.toLowerCase();
+                        
+                        // Add click event to navigate to the site
+                        elementDiv.addEventListener('click', () => {
+                            navigateToSite(site);
+                        });
+
+                        // Make the element draggable
+                        elementDiv.draggable = true;
+                        elementDiv.addEventListener('dragstart', (e) => {
+                            e.dataTransfer.setData('text/plain', JSON.stringify({
+                                symbol: site.symbol, 
+                                fromRow: row, 
+                                fromCol: col
+                            }));
+                        });
+                    } else {
+                        elementDiv.className = 'element empty-cell';
+                    }
+                    
+                    // Add drag events for all cells to enable dropping
+                    elementDiv.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                    });
+                    
+                    elementDiv.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+                        moveElement(data.symbol, data.fromRow, data.fromCol, row, col);
+                    });
+                    
+                    periodicTable.appendChild(elementDiv);
+                }
+            }
+            
+            // Apply search filtering if there's a current search
+            if (currentSearch) {
+                applySearch();
+            }
+        }
+        
+        // Function to navigate to a site
+        function navigateToSite(site) {
+            // Update visit count
+            visitCounts[site.url] = (visitCounts[site.url] || 0) + 1;
+            localStorage.setItem('periodict-visits', JSON.stringify(visitCounts));
+            
+            // Navigate to the URL
+            window.open(site.url, '_blank');
+        }
+        
+        // Function to move an element in the grid
+        function moveElement(symbol, fromRow, fromCol, toRow, toCol) {
+            const siteIndex = sites.findIndex(s => 
+                s.symbol === symbol && 
+                s.position.row === fromRow + 1 && 
+                s.position.col === fromCol + 1
+            );
+            
+            if (siteIndex !== -1) {
+                // Check if there's already a site at the target position
+                const targetSiteIndex = sites.findIndex(s => 
+                    s.position.row === toRow + 1 && 
+                    s.position.col === toCol + 1
+                );
+                
+                // Update the position of the dragged site
+                sites[siteIndex].position = { row: toRow + 1, col: toCol + 1 };
+                
+                // If there was a site at the target, swap their positions
+                if (targetSiteIndex !== -1) {
+                    sites[targetSiteIndex].position = { row: fromRow + 1, col: fromCol + 1 };
+                }
+                
+                // Save the updated sites
+                saveSites();
+                
+                // Re-render the table
+                renderPeriodicTable();
+            }
+        }
+        
+        // Function to apply search filtering
+        function applySearch() {
+            const elements = document.querySelectorAll('.element:not(.empty-cell)');
+            const searchTerm = currentSearch.toLowerCase();
+            
+            let hasHighlighted = false;
+            
+            elements.forEach(element => {
+                const symbol = element.dataset.symbol;
+                const name = element.querySelector('.element-name').textContent.toLowerCase();
+                const url = element.dataset.url.toLowerCase();
+                
+                // Extract domain from URL
+                const domain = new URL(url).hostname.replace('www.', '');
+                const domainParts = domain.split('.');
+
+                // Check if search matches symbol, name start, or domain name (not TLD)
+                if (symbol.startsWith(searchTerm) || 
+                    name.startsWith(searchTerm) || 
+                    domainParts[0].startsWith(searchTerm)) {
+                    element.classList.add('highlighted');
+                    element.classList.remove('disabled');
+                    hasHighlighted = true;
+                } else {
+                    element.classList.remove('highlighted');
+                    element.classList.add('disabled');
+                }
+            });
+            
+            return hasHighlighted;
+        }
+        
+        // Function to clear search
+        function clearSearch() {
+            currentSearch = '';
+            searchDisplay.textContent = '';
+            
+            const elements = document.querySelectorAll('.element');
+            elements.forEach(element => {
+                element.classList.remove('highlighted');
+                element.classList.remove('disabled');
+            });
+        }
+        
+        // Function to navigate to the first highlighted site
+        function navigateToFirstHighlighted() {
+            const highlighted = document.querySelector('.element.highlighted');
+            if (highlighted) {
+                const url = highlighted.dataset.url;
+                const site = sites.find(s => s.url === url);
+                if (site) {
+                    navigateToSite(site);
+                }
+            }
+        }
+        
+        // Function to save sites to localStorage
+        function saveSites() {
+            localStorage.setItem('periodict-sites', JSON.stringify(sites));
+        }
+        
+        // Event listener for keyboard input
+        document.addEventListener('keydown', (e) => {
+            // Ignore key events when focus is in the settings textarea
+            if (e.target.tagName === 'TEXTAREA') {
+                return;
+            }
+            
+            if (e.key === 'Escape') {
+                // Clear search on Escape
+                clearSearch();
+            } else if (e.key === 'Enter') {
+                // Navigate to the first highlighted site on Enter
+                navigateToFirstHighlighted();
+            } else if (e.key === 'Backspace') {
+                // Remove the last character from the search
+                if (currentSearch.length > 0) {
+                    currentSearch = currentSearch.slice(0, -1);
+                    searchDisplay.textContent = currentSearch;
+                    applySearch();
+                }
+            } else if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+                // Add the character to the search
+                currentSearch += e.key;
+                searchDisplay.textContent = currentSearch;
+                applySearch();
+            }
+        });
+        
+        // Settings modal functions
+        function openSettingsModal() {
+            // Convert sites to text format
+            const sitesText = sites.map(site => 
+                `${site.symbol},${site.url},${site.name},${site.position.row},${site.position.col}`
+            ).join('\n');
+            
+            sitesEditor.value = sitesText;
+            settingsModal.style.display = 'flex';
+        }
+        
+        function closeSettingsModal() {
+            settingsModal.style.display = 'none';
+        }
+        
+        function applySettings() {
+            try {
+                // Parse the text into sites
+                const lines = sitesEditor.value.trim().split('\n');
+                const newSites = lines.map(line => {
+                    const [symbol, url, name, row, col] = line.split(',');
+                    return {
+                        symbol: symbol.trim(),
+                        url: url.trim(),
+                        name: name.trim(),
+                        position: {
+                            row: parseInt(row) || 1,
+                            col: parseInt(col) || 1
+                        }
+                    };
+                });
+                
+                // Update sites
+                sites = newSites;
+                saveSites();
+                
+                // Re-render the table
+                renderPeriodicTable();
+                
+                // Close the modal
+                closeSettingsModal();
+            } catch (error) {
+                alert('Error parsing sites. Please check the format.');
+                console.error(error);
+            }
+        }
+        
+        // Event listeners for the settings modal
+        settingsButton.addEventListener('click', openSettingsModal);
+        closeSettings.addEventListener('click', closeSettingsModal);
+        cancelSettings.addEventListener('click', closeSettingsModal);
+        saveSettings.addEventListener('click', applySettings);
+        
+        // Initialize the page
+        renderPeriodicTable();
+    </script>
+</body>
+</html>
