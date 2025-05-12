@@ -25,8 +25,10 @@
             background-color: var(--bg-main);
             color: var(--color-text-primary);
             margin: 0;
-            padding: 20px;
-            min-height: 100vh;
+            padding: 20px;    /* Reduce padding from 20px to 10px */
+            height: 100vh;    /* Set explicit height */
+            max-height: 100vh;
+            overflow: hidden; /* Prevent scrolling */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -92,23 +94,24 @@
             display: grid;
             grid-template-columns: repeat(18, 1fr);
             grid-template-rows: repeat(7, 1fr);
-            gap: 6px;
+            gap: 4px;              /* Reduce gap from 6px to 4px */
             max-width: 1200px;
             width: 100%;
+            /* height: calc(100vh - 60px); Subtract header height + padding */
+            max-height: calc(100vh - 60px);
         }
 
         .element {
-            /* Set fixed dimensions */
-            width: 70px;         /* Set a specific width */
-            height: 70px;        /* Same as width for a square */
+            /* Calculate size based on available space */
+            width: auto;           /* Let grid determine width */
+            height: auto;          /* Let grid determine height */
+            min-width: unset;      /* Remove min constraints */
+            min-height: unset;
+            max-width: 100%;       /* Allow fitting to grid */
+            max-height: 100%;
+            aspect-ratio: 1/1;     /* Keep square shape */
             
-            /* Maintain aspect ratio but don't allow growth */
-            min-width: 70px;
-            min-height: 70px;
-            max-width: 70px;
-            max-height: 70px;
-            
-            /* Keep your existing styles */
+            /* Other properties remain the same */
             background-color: var(--bg-surface);
             border: 1px solid var(--color-border);
             border-radius: 4px;
@@ -119,10 +122,8 @@
             cursor: pointer;
             transition: all 0.2s;
             position: relative;
-            
-            /* Prevent content from affecting dimensions */
             box-sizing: border-box;
-            overflow: hidden;    /* Hide overflow content */
+            overflow: hidden;
         }
 
         .element:hover {
@@ -144,22 +145,19 @@
         }
 
         .element-symbol {
-            font-size: 24px;
+            font-size: max(16px, min(3vw, 24px)); /* Responsive font size */
             font-weight: bold;
             line-height: 1;
-            max-width: 90%;      /* Constrain width */
-            overflow: hidden;    /* Hide overflow */
-            text-overflow: ellipsis;
         }
 
         .element-name {
-            font-size: 10px;
-            margin-top: 4px;
+            font-size: max(7px, min(1.5vw, 10px)); /* Responsive font size */
+            margin-top: 2px;
             text-align: center;
-            width: 90%;           /* Use a percentage width */
+            width: 90%;
             overflow: hidden;
             text-overflow: ellipsis;
-            white-space: nowrap;  /* Prevent wrapping */
+            white-space: nowrap;
         }
 
         .element-position {
