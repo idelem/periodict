@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Periodic Table Homepage</title>
+    <style>
+        :root {
+            --color-text-primary: #333;
+            --color-text-secondary: #666;
+            --color-border: #e0e0e0;
+            --color-border-hover: #d0d0d0;
+            --color-hover: #e8e8e8;
+            --color-night: #f1f1f1;
+            --bg-main: #f8f7f6;
+            --bg-surface: #f2f1f0;
+            --bg-surface-hover: #e8e8e8;
+            --bg-secondary: #e8e8e8;
+            --bg-component: #e0e0e0;
+            --bg-placeholder: #ccc;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--color-text-primary);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--color-text-primary);
+            margin-bottom: 20px;
+        }
+
+        .input-container {
+            margin-bottom: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        #search-input {
+            padding: 10px 15px;
+            font-size: 16px;
+            border: 2px solid var(--color-border);
+            border-radius: 5px;
+            background-color: var(--bg-surface);
+            color: var(--color-text-primary);
+            width: 300px;
+            transition: border-color 0.3s;
+        }
+
+        #search-input:focus {
+            outline: none;
+            border-color: var(--color-border-hover);
+        }
+
+        .periodic-table {
+            display: grid;
+            grid-template-columns: repeat(18, 1fr);
+            gap: 5px;
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+        .element {
+            border: 2px solid var(--color-border);
+            background-color: var(--bg-surface);
+            border-radius: 4px;
+            padding: 5px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            aspect-ratio: 1/1;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .element:hover {
+            background-color: var(--bg-surface-hover);
+            border-color: var(--color-border-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .element.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .element.highlighted {
+            background-color: var(--bg-component);
+            border-color: var(--color-text-secondary);
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .symbol {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+
+        .name {
+            font-size: 8px;
+            text-align: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            width: 100%;
+        }
+
+        .empty {
+            visibility: hidden;
+        }
+
+        .spacer {
+            grid-column: span 10;
+        }
+
+        .add-site {
+            border: 2px dashed var(--color-border);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            color: var(--color-text-secondary);
+        }
+
+        .add-site:hover {
+            border-color: var(--color-border-hover);
+            color: var(--color-text-primary);
+        }
+
+        #site-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: var(--bg-surface);
+            padding: 20px;
+            border-radius: 8px;
+            width: 400px;
+            max-width: 90%;
+        }
+
+        .modal-content h2 {
+            margin-top: 0;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--color-border);
+            border-radius: 4px;
+            background-color: var(--bg-main);
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background-color: var(--bg-component);
+            color: var(--color-text-primary);
+        }
+
+        button:hover {
+            background-color: var(--bg-secondary);
+        }
+
+        button.primary {
+            background-color: #4a90e2;
+            color: white;
+        }
+
+        button.primary:hover {
+            background-color: #3a80d2;
+        }
+
+        button.danger {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        button.danger:hover {
+            background-color: #d74c3c;
+        }
+
+        .status-bar {
+            margin-top: 20px;
+            color: var(--color-text-secondary);
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .periodic-table {
+                grid-template-columns: repeat(9, 1fr);
+            }
+            
+            .spacer {
+                grid-column: span 5;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .periodic-table {
+                grid-template-columns: repeat(6, 1fr);
+            }
+            
+            .spacer {
+                grid-column: span 3;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Periodic Table of Websites</h1>
+        
+        <div class="input-container">
+            <input type="text" id="search-input" placeholder="Type to search..." autocomplete="off">
+        </div>
+        
+        <div class="periodic-table" id="periodic-table">
+            <!-- Elements will be added here dynamically -->
+        </div>
+        
+        <div class="status-bar" id="status-bar"></div>
+    </div>
+
+    <div id="site-modal">
+        <div class="modal-content">
+            <h2 id="modal-title">Add New Site</h2>
+            <div class="form-group">
+                <label for="site-name">Website Name</label>
+                <input type="text" id="site-name" placeholder="e.g. Google">
+            </div>
+            <div class="form-group">
+                <label for="site-url">Website URL</label>
+                <input type="text" id="site-url" placeholder="e.g. https://google.com">
+            </div>
+            <div class="form-group">
+                <label for="site-symbol">Symbol (2 letters)</label>
+                <input type="text" id="site-symbol" placeholder="e.g. Go" maxlength="2">
+            </div>
+            <div class="button-group">
+                <button id="modal-cancel">Cancel</button>
+                <button id="modal-delete" class="danger" style="display: none;">Delete</button>
+                <button id="modal-save" class="primary">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Default websites with their symbols
+        const defaultSites = [
+            { symbol: 'Go', name: 'Google', url: 'https://google.com' },
+            { symbol: 'Fb', name: 'Facebook', url: 'https://facebook.com' },
+            { symbol: 'Yt', name: 'YouTube', url: 'https://youtube.com' },
+            { symbol: 'Tw', name: 'Twitter', url: 'https://twitter.com' },
+            { symbol: 'Ig', name: 'Instagram', url: 'https://instagram.com' },
+            { symbol: 'Rd', name: 'Reddit', url: 'https://reddit.com' },
+            { symbol: 'Lk', name: 'LinkedIn', url: 'https://linkedin.com' },
+            { symbol: 'Gt', name: 'GitHub', url: 'https://github.com' },
+            { symbol: 'Nf', name: 'Netflix', url: 'https://netflix.com' },
+            { symbol: 'Am', name: 'Amazon', url: 'https://amazon.com' },
+            { symbol: 'Wi', name: 'Wikipedia', url: 'https://wikipedia.org' },
+            { symbol: 'Gm', name: 'Gmail', url: 'https://mail.google.com' },
+            { symbol: 'Cl', name: 'Claude', url: 'https://claude.ai' },
+            { symbol: 'Cg', name: 'ChatGPT', url: 'https://chat.openai.com' },
+            { symbol: 'Sp', name: 'Spotify', url: 'https://spotify.com' },
+            { symbol: 'Md', name: 'Medium', url: 'https://medium.com' },
+            { symbol: 'Sl', name: 'Slack', url: 'https://slack.com' },
+            { symbol: 'Dc', name: 'Discord', url: 'https://discord.com' },
+            { symbol: 'Pn', name: 'Pinterest', url: 'https://pinterest.com' },
+            { symbol: 'Qr', name: 'Quora', url: 'https://quora.com' },
+            { symbol: 'Td', name: 'Todoist', url: 'https://todoist.com' },
+            { symbol: 'Nn', name: 'Notion', url: 'https://notion.so' },
+            { symbol: 'Tc', name: 'Twitch', url: 'https://twitch.tv' },
+            { symbol: 'Ms', name: 'Microsoft', url: 'https://microsoft.com' },
+            { symbol: 'Ap', name: 'Apple', url: 'https://apple.com' },
+            { symbol: 'Dr', name: 'Drive', url: 'https://drive.google.com' },
+            { symbol: 'Tr', name: 'Translate', url: 'https://translate.google.com' },
+            { symbol: 'Mp', name: 'Maps', url: 'https://maps.google.com' },
+            { symbol: 'Wb', name: 'WeiBo', url: 'https://weibo.com' },
+            { symbol: 'Dv', name: 'DevTo', url: 'https://dev.to' },
+            { symbol: 'Hk', name: 'HackerNews', url: 'https://news.ycombinator.com' },
+            { symbol: 'Pf', name: 'Portfolio', url: 'https://your-portfolio-url.com' },
+            { symbol: 'Wx', name: 'Weather', url: 'https://weather.com' },
+            { symbol: 'Nw', name: 'News', url: 'https://news.google.com' },
+            { symbol: 'Tc', name: 'TechCrunch', url: 'https://techcrunch.com' },
+            { symbol: 'Md', name: 'MDN', url: 'https://developer.mozilla.org' },
+            { symbol: 'So', name: 'StackOverflow', url: 'https://stackoverflow.com' },
+            { symbol: 'Cp', name: 'CodePen', url: 'https://codepen.io' },
+            { symbol: 'Fi', name: 'Figma', url: 'https://figma.com' },
+            { symbol: 'Ka', name: 'Kaggle', url: 'https://kaggle.com' },
+            { symbol: 'Ln', name: 'LeetCode', url: 'https://leetcode.com' },
+            { symbol: 'Ad', name: 'Adobe', url: 'https://adobe.com' },
+            { symbol: 'Dz', name: 'Dezeen', url: 'https://dezeen.com' },
+            { symbol: 'Dr', name: 'Dribbble', url: 'https://dribbble.com' },
+            { symbol: 'Bh', name: 'Behance', url: 'https://behance.net' },
+            { symbol: 'Pm', name: 'Product Hunt', url: 'https://producthunt.com' },
+            { symbol: 'Th', name: 'The Verge', url: 'https://theverge.com' },
+            { symbol: 'Tc', name: 'TechCrunch', url: 'https://techcrunch.com' },
+            { symbol: 'Ws', name: 'Wired', url: 'https://wired.com' },
+        ];
+
+        // Variables to track state
+        let sites = [];
+        let currentSearchTerm = '';
+        let currentlyEditing = null;
+        let visitedSites = {};
+
+        // DOM elements
+        const periodicTable = document.getElementById('periodic-table');
+        const searchInput = document.getElementById('search-input');
+        const statusBar = document.getElementById('status-bar');
+        const siteModal = document.getElementById('site-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const siteName = document.getElementById('site-name');
+        const siteUrl = document.getElementById('site-url');
+        const siteSymbol = document.getElementById('site-symbol');
+        const modalSave = document.getElementById('modal-save');
+        const modalCancel = document.getElementById('modal-cancel');
+        const modalDelete = document.getElementById('modal-delete');
+
+        // Initialize the page
+        function init() {
+            loadSites();
+            renderPeriodicTable();
+            setupEventListeners();
+            searchInput.focus();
+        }
+
+        // Load sites from localStorage or use defaults
+        function loadSites() {
+            let savedSites = localStorage.getItem('periodicTableSites');
+            sites = savedSites ? JSON.parse(savedSites) : [...defaultSites];
+            
+            // Load visited sites
+            let saved = localStorage.getItem('visitedSites');
+            visitedSites = saved ? JSON.parse(saved) : {};
+        }
+
+        // Save sites to localStorage
+        function saveSites() {
+            localStorage.setItem('periodicTableSites', JSON.stringify(sites));
+        }
+
+        // Record visited site
+        function recordVisit(url) {
+            const now = Date.now();
+            visitedSites[url] = {
+                lastVisit: now,
+                count: (visitedSites[url]?.count || 0) + 1
+            };
+            localStorage.setItem('visitedSites', JSON.stringify(visitedSites));
+        }
+
+        // Clear and render the periodic table
+        function renderPeriodicTable() {
+            periodicTable.innerHTML = '';
+            
+            // Sort sites by frequency if available
+            let sortedSites = [...sites].sort((a, b) => {
+                const countA = visitedSites[a.url]?.count || 0;
+                const countB = visitedSites[b.url]?.count || 0;
+                return countB - countA;
+            });
+            
+            // Add the existing sites
+            sortedSites.forEach(site => {
+                const element = createElement(site);
+                periodicTable.appendChild(element);
+            });
+            
+            // Add the "Add New Site" element
+            const addElement = document.createElement('div');
+            addElement.className = 'element add-site';
+            addElement.innerHTML = '+';
+            addElement.title = 'Add New Site';
+            addElement.addEventListener('click', () => openAddSiteModal());
+            periodicTable.appendChild(addElement);
+            
+            // Add empty elements to fill out grid
+            const totalSlots = 118; // Standard periodic table size
+            const currentElements = sortedSites.length + 1; // +1 for add button
+            
+            for (let i = currentElements; i < totalSlots; i++) {
+                const emptyElement = document.createElement('div');
+                emptyElement.className = 'element empty';
+                periodicTable.appendChild(emptyElement);
+            }
+            
+            // Filter by current search term
+            filterElements();
+        }
+
+        // Create a single element in the periodic table
+        function createElement(site) {
+            const element = document.createElement('div');
+            element.className = 'element';
+            element.dataset.symbol = site.symbol.toLowerCase();
+            element.dataset.name = site.name.toLowerCase();
+            element.dataset.url = site.url;
+            
+            const symbol = document.createElement('div');
+            symbol.className = 'symbol';
+            symbol.textContent = site.symbol;
+            
+            const name = document.createElement('div');
+            name.className = 'name';
+            name.textContent = site.name;
+            
+            element.appendChild(symbol);
+            element.appendChild(name);
+            
+            element.addEventListener('click', () => {
+                if (!element.classList.contains('disabled')) {
+                    visitSite(site.url);
+                }
+            });
+            
+            // Add context menu for editing
+            element.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                openEditSiteModal(site);
+            });
+            
+            return element;
+        }
+
+        // Set up event listeners
+        function setupEventListeners() {
+            // Search input events
+            searchInput.addEventListener('input', () => {
+                currentSearchTerm = searchInput.value.toLowerCase();
+                filterElements();
+            });
+            
+            // Handle keyboard navigation
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    if (siteModal.style.display === 'flex') {
+                        closeModal();
+                    } else {
+                        searchInput.value = '';
+                        currentSearchTerm = '';
+                        filterElements();
+                        searchInput.focus();
+                    }
+                } else if (e.key === 'Enter') {
+                    const highlighted = document.querySelectorAll('.element.highlighted');
+                    if (highlighted.length > 0 && !siteModal.style.display === 'flex') {
+                        visitSite(highlighted[0].dataset.url);
+                    }
+                }
+            });
+            
+            // Modal events
+            modalSave.addEventListener('click', saveSiteModal);
+            modalCancel.addEventListener('click', closeModal);
+            modalDelete.addEventListener('click', deleteSite);
+            
+            // Close modal when clicking outside
+            siteModal.addEventListener('click', (e) => {
+                if (e.target === siteModal) {
+                    closeModal();
+                }
+            });
+        }
+
+        // Filter elements based on search term
+        function filterElements() {
+            const elements = document.querySelectorAll('.element:not(.empty):not(.add-site)');
+            let highlightedCount = 0;
+            
+            elements.forEach(element => {
+                // Reset classes
+                element.classList.remove('highlighted');
+                element.classList.remove('disabled');
+                
+                if (currentSearchTerm) {
+                    const symbolMatch = element.dataset.symbol.includes(currentSearchTerm);
+                    const nameMatch = element.dataset.name.includes(currentSearchTerm);
+                    
+                    if (symbolMatch || nameMatch) {
+                        element.classList.add('highlighted');
+                        highlightedCount++;
+                    } else {
+                        element.classList.add('disabled');
+                    }
+                }
+            });
+            
+            // Update status bar
+            if (currentSearchTerm) {
+                statusBar.textContent = `${highlightedCount} ${highlightedCount === 1 ? 'site' : 'sites'} found matching "${currentSearchTerm}"`;
+            } else {
+                statusBar.textContent = `${elements.length} sites available. Type to search or press Enter to visit.`;
+            }
+        }
+
+        // Open the site in a new tab
+        function visitSite(url) {
+            window.open(url, '_blank');
+            recordVisit(url);
+        }
+
+        // Open modal to add a new site
+        function openAddSiteModal() {
+            modalTitle.textContent = 'Add New Site';
+            siteName.value = '';
+            siteUrl.value = '';
+            siteSymbol.value = '';
+            modalDelete.style.display = 'none';
+            currentlyEditing = null;
+            siteModal.style.display = 'flex';
+            siteName.focus();
+        }
+
+        // Open modal to edit an existing site
+        function openEditSiteModal(site) {
+            modalTitle.textContent = 'Edit Site';
+            siteName.value = site.name;
+            siteUrl.value = site.url;
+            siteSymbol.value = site.symbol;
+            modalDelete.style.display = 'block';
+            currentlyEditing = site;
+            siteModal.style.display = 'flex';
+            siteName.focus();
+        }
+
+        // Close the modal
+        function closeModal() {
+            siteModal.style.display = 'none';
+            searchInput.focus();
+        }
+
+        // Save the site from modal
+        function saveSiteModal() {
+            const name = siteName.value.trim();
+            const url = siteUrl.value.trim();
+            let symbol = siteSymbol.value.trim();
+            
+            if (!name || !url) {
+                alert('Please enter both name and URL');
+                return;
+            }
+            
+            // Generate symbol from name if not provided
+            if (!symbol) {
+                const words = name.split(' ');
+                if (words.length >= 2) {
+                    symbol = (words[0][0] + words[1][0]).toUpperCase();
+                } else if (name.length >= 2) {
+                    symbol = name.substring(0, 2).toUpperCase();
+                } else {
+                    symbol = name[0].toUpperCase() + 'x';
+                }
+            } else {
+                // Ensure symbol is exactly 2 characters
+                if (symbol.length === 1) {
+                    symbol = symbol.toUpperCase() + 'x';
+                } else {
+                    symbol = symbol.substring(0, 2).toUpperCase();
+                }
+            }
+            
+            // Add http if not present
+            if (!/^https?:\/\//i.test(url)) {
+                url = 'https://' + url;
+            }
+            
+            const site = { name, url, symbol };
+            
+            if (currentlyEditing) {
+                // Update existing site
+                const index = sites.findIndex(s => 
+                    s.name === currentlyEditing.name && 
+                    s.url === currentlyEditing.url &&
+                    s.symbol === currentlyEditing.symbol
+                );
+                if (index >= 0) {
+                    sites[index] = site;
+                }
+            } else {
+                // Add new site
+                sites.push(site);
+            }
+            
+            saveSites();
+            renderPeriodicTable();
+            closeModal();
+        }
+
+        // Delete the current site
+        function deleteSite() {
+            if (!currentlyEditing) return;
+            
+            const index = sites.findIndex(s => 
+                s.name === currentlyEditing.name && 
+                s.url === currentlyEditing.url &&
+                s.symbol === currentlyEditing.symbol
+            );
+            
+            if (index >= 0) {
+                sites.splice(index, 1);
+                saveSites();
+                renderPeriodicTable();
+                closeModal();
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
